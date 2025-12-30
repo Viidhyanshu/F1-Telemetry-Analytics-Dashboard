@@ -22,7 +22,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Enable FastF1 caching for better performance
-fastf1.Cache.enable_cache('cache')
+
 
 # Page configuration
 st.set_page_config(
