@@ -1,5 +1,8 @@
 # 🏎️ F1 Telemetry Analytics Dashboard
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-blue)](https://vidhyanshu-f1-telemetry-analytics.streamlit.app/)
+
+
 A comprehensive Python-based dashboard for visualizing Formula 1 telemetry data using Streamlit and FastF1.
 
 ##  Overview
