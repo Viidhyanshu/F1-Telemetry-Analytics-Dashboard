@@ -2,7 +2,7 @@
 
 A comprehensive Python-based dashboard for visualizing Formula 1 telemetry data using Streamlit and FastF1.
 
-## 📋 Overview
+##  Overview
 
 This application allows you to:
 - Select any F1 race from 2018 onwards
@@ -12,7 +12,7 @@ This application allows you to:
 - Compare qualifying vs race laps
 - View throttle, brake, and gear usage overlays
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -48,7 +48,7 @@ This application allows you to:
      - For multiple drivers, separate with commas: `VER, HAM, LEC`
 
 2. **Load Data**
-   - Click the **"🚀 Load Race Data"** button
+   - Click the **" Load Race Data"** button
    - Wait for data to load (first time may take longer due to caching)
 
 3. **Explore Visualizations**
@@ -62,32 +62,32 @@ This application allows you to:
 - Color-coded by speed (darker = faster)
 - Includes track outline and start/finish line marker
 
-#### ⚡ Throttle Heatmap
+####  Throttle Heatmap
 - Visualize throttle application throughout the lap
 - Green color scale (darker = more throttle)
 
-#### 🛑 Brake Zones
+####  Brake Zones
 - Identify braking points around the track
 - Red color scale (darker = more braking)
 
-#### ⚙️ Gear Usage
+####  Gear Usage
 - See which gear is used at each point
 - Color-coded by gear number
 
-#### 🔀 Driver Comparison
+####  Driver Comparison
 - Compare racing lines of multiple drivers
 - Useful for analyzing different racing strategies
 
-#### 📊 Sector-wise Lap Delta
+####  Sector-wise Lap Delta
 - Analyze performance across different sectors
 - Shows delta time from best sector time for each lap
 - Helps identify where a driver gains or loses time
 
-#### 🏆 Qualifying vs Race
+####  Qualifying vs Race
 - Compare the fastest qualifying lap with the fastest race lap
 - Useful for understanding tire degradation and fuel load effects
 
-## 🔧 How Telemetry Data is Fetched
+##  How Telemetry Data is Fetched
 
 ### FastF1 Library
 
@@ -128,7 +128,7 @@ Each telemetry DataFrame contains:
 - **Time**: Timestamp
 - **Distance**: Distance traveled (meters)
 
-## 🎨 Technical Details
+##  Technical Details
 
 ### Architecture
 
@@ -155,7 +155,7 @@ Each telemetry DataFrame contains:
    - Helpful error messages
    - Responsive layout
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -195,7 +195,7 @@ Common driver codes (2024 season):
 
 *Note: Driver codes may change between seasons*
 
-## 🔮 Future Improvements
+##  Future Improvements
 
 ### Potential Enhancements
 
@@ -227,21 +227,15 @@ Common driver codes (2024 season):
    - Optimal racing line suggestions
    - Driver performance classification
 
-## 📝 License
+##  License
 
 This project is open source and available for educational purposes.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **FastF1** library by theOehrly - [GitHub](https://github.com/theOehrly/Fast-F1)
 - **Streamlit** for the amazing framework
 - **Formula 1** and the FIA for providing official data
-
-## 📧 Support
-
-For issues, questions, or contributions:
-- Check the FastF1 documentation: https://docs.fastf1.dev/
-- Review Streamlit documentation: https://docs.streamlit.io/
 
 ---
 
