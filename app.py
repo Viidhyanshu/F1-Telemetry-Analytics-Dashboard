@@ -1,17 +1,18 @@
 import os
+import warnings
 import fastf1
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import warnings
 
 warnings.filterwarnings("ignore")
 
+# Enable caching to avoid re-downloading large F1 datasets every run
 os.makedirs(".fastf1_cache", exist_ok=True)
 fastf1.Cache.enable_cache(".fastf1_cache")
 
+# Streamlit page setup for dashboard-style layout
 st.set_page_config(
     page_title="F1 Telemetry Analytics",
     page_icon="🏎️",
@@ -19,6 +20,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Minimal styling to keep F1 branding feel without UI clutter
 st.markdown("""
 <style>
 .main-header {
@@ -34,53 +36,64 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Session state is used so data doesn't reload on every UI interaction
 if "race_data" not in st.session_state:
     st.session_state.race_data = None
-if "qualifying_data" not in st.session_state:
-    st.session_state.qualifying_data = None
 
 
-def get_years():
+def available_years():
+    # FastF1 reliably supports seasons from 2018 onwards
     return list(range(2018, pd.Timestamp.now().year + 1))
 
 
-def get_schedule(year):
+def load_schedule(year):
+    # Centralized schedule loading to isolate API failures
     try:
         return fastf1.get_event_schedule(year)
     except:
         return None
 
 
-def load_session(year, rnd, s_type):
+def load_race_session(year, round_no):
+    # Load once and reuse to keep UI responsive
     try:
-        session = fastf1.get_session(year, rnd, s_type)
+        session = fastf1.get_session(year, round_no, "R")
         session.load()
         return session
     except:
         return None
 
 
-def get_telemetry(session, driver):
+def fastest_lap_telemetry(session, driver):
+    # Using fastest lap ensures clean, comparable racing line data
     try:
         laps = session.laps.pick_driver(driver)
         if laps.empty:
             return None
+
         lap = laps.pick_fastest()
         tel = lap.get_telemetry()
+
+        # Normalize brake values for consistent heatmaps
         if "Brake" in tel and tel["Brake"].max() <= 1:
             tel["Brake"] *= 100
+
+        # Distance ordering prevents broken track lines
         if "Distance" in tel:
             tel = tel.sort_values("Distance")
+
         return tel
     except:
         return None
 
 
-def racing_line(tel, title, color_col):
+def racing_line_plot(tel, title, metric):
+    # Track maps require X-Y positional data
     if tel is None or "X" not in tel or "Y" not in tel:
         return None
 
-    color_map = {
+    # Central mapping keeps visualization logic predictable
+    metric_map = {
         "Speed": ("Speed", "Speed (km/h)", "Viridis"),
         "Throttle": ("Throttle", "Throttle (%)", "Greens"),
         "Brake": ("Brake", "Brake (%)", "Reds"),
@@ -88,7 +101,7 @@ def racing_line(tel, title, color_col):
         "DRS": ("DRS", "DRS", "Blues")
     }
 
-    col, label, scale = color_map[color_col]
+    col, label, scale = metric_map[metric]
     if col not in tel:
         return None
 
@@ -108,40 +121,45 @@ def racing_line(tel, title, color_col):
         name="Racing Line"
     ))
 
+    # Equal axis scaling preserves real track geometry
     fig.update_layout(
         title=title,
         height=700,
         template="plotly_white"
     )
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
+
     return fig
 
 
 def compare_drivers(session, drivers):
+    # Overlaying racing lines highlights driving style differences
     fig = go.Figure()
     colors = ["red", "blue", "green", "orange", "purple"]
 
-    for i, d in enumerate(drivers):
-        tel = get_telemetry(session, d)
+    for i, driver in enumerate(drivers):
+        tel = fastest_lap_telemetry(session, driver)
         if tel is not None:
             fig.add_trace(go.Scatter(
                 x=tel["X"],
                 y=tel["Y"],
                 mode="lines",
-                name=d,
+                name=driver,
                 line=dict(width=4, color=colors[i % len(colors)])
             ))
 
     fig.update_layout(
-        title="Driver Comparison",
+        title="Driver Racing Line Comparison",
         height=800,
         template="plotly_white"
     )
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
+
     return fig
 
 
-def sector_delta(session, driver):
+def sector_delta_plot(session, driver):
+    # Sector deltas show consistency and race pace evolution
     laps = session.laps.pick_driver(driver)
     data = laps[["LapNumber", "Sector1Time", "Sector2Time", "Sector3Time"]].dropna()
     if data.empty:
@@ -150,13 +168,18 @@ def sector_delta(session, driver):
     for s in ["Sector1Time", "Sector2Time", "Sector3Time"]:
         data[s] = data[s].dt.total_seconds()
 
-    fig = make_subplots(rows=3, cols=1)
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
 
     fig.add_trace(go.Scatter(x=data["LapNumber"], y=data["Sector1Time"]), 1, 1)
     fig.add_trace(go.Scatter(x=data["LapNumber"], y=data["Sector2Time"]), 2, 1)
     fig.add_trace(go.Scatter(x=data["LapNumber"], y=data["Sector3Time"]), 3, 1)
 
-    fig.update_layout(height=800, title="Sector Delta")
+    fig.update_layout(
+        title="Sector Time Trend",
+        height=800,
+        template="plotly_white"
+    )
+
     return fig
 
 
@@ -164,19 +187,19 @@ def main():
     st.markdown('<div class="main-header">F1 Telemetry Analytics Dashboard</div>', unsafe_allow_html=True)
 
     with st.sidebar:
-        year = st.selectbox("Year", get_years())
-        schedule = get_schedule(year)
+        year = st.selectbox("Season", available_years())
+        schedule = load_schedule(year)
 
         if schedule is None:
             st.stop()
 
-        race_names = [f"Round {r.RoundNumber}: {r.EventName}" for _, r in schedule.iterrows()]
-        race_choice = st.selectbox("Race", race_names)
-        round_no = schedule.iloc[race_names.index(race_choice)]["RoundNumber"]
+        races = [f"Round {r.RoundNumber}: {r.EventName}" for _, r in schedule.iterrows()]
+        race_choice = st.selectbox("Race", races)
+        round_no = schedule.iloc[races.index(race_choice)]["RoundNumber"]
 
         drivers = st.text_input("Driver Codes", "VER").upper().split(",")
 
-        load = st.button("Load Data")
+        load = st.button("Load Race Data")
 
         show_throttle = st.checkbox("Throttle")
         show_brake = st.checkbox("Brake")
@@ -186,37 +209,35 @@ def main():
         show_sector = st.checkbox("Sector Delta")
 
     if load:
-        race = load_session(year, round_no, "R")
-        st.session_state.race_data = race
+        st.session_state.race_data = load_race_session(year, round_no)
 
-    race = st.session_state.race_data
-    if race is None:
-        st.info("Load race data to begin")
+    session = st.session_state.race_data
+    if session is None:
+        st.info("Load race data to begin analysis")
         return
 
     driver = drivers[0]
-    tel = get_telemetry(race, driver)
-
+    tel = fastest_lap_telemetry(session, driver)
     if tel is None:
-        st.error("No telemetry found")
+        st.error("Telemetry not available for selected driver")
         return
 
-    st.plotly_chart(racing_line(tel, f"Speed - {driver}", "Speed"), True)
+    st.plotly_chart(racing_line_plot(tel, f"Speed Map — {driver}", "Speed"), True)
 
     if show_throttle:
-        st.plotly_chart(racing_line(tel, f"Throttle - {driver}", "Throttle"), True)
+        st.plotly_chart(racing_line_plot(tel, f"Throttle — {driver}", "Throttle"), True)
     if show_brake:
-        st.plotly_chart(racing_line(tel, f"Brake - {driver}", "Brake"), True)
+        st.plotly_chart(racing_line_plot(tel, f"Brake — {driver}", "Brake"), True)
     if show_gear:
-        st.plotly_chart(racing_line(tel, f"Gear - {driver}", "Gear"), True)
+        st.plotly_chart(racing_line_plot(tel, f"Gear — {driver}", "Gear"), True)
     if show_drs:
-        st.plotly_chart(racing_line(tel, f"DRS - {driver}", "DRS"), True)
+        st.plotly_chart(racing_line_plot(tel, f"DRS — {driver}", "DRS"), True)
 
     if show_compare and len(drivers) > 1:
-        st.plotly_chart(compare_drivers(race, drivers), True)
+        st.plotly_chart(compare_drivers(session, drivers), True)
 
     if show_sector:
-        fig = sector_delta(race, driver)
+        fig = sector_delta_plot(session, driver)
         if fig:
             st.plotly_chart(fig, True)
 
