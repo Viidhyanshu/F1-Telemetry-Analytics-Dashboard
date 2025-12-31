@@ -230,10 +230,6 @@ Common driver codes (2024 season):
    - Optimal racing line suggestions
    - Driver performance classification
 
-##  License
-
-This project is open source and available for educational purposes.
-
 ## Acknowledgments
 
 - **FastF1** library by theOehrly - [GitHub](https://github.com/theOehrly/Fast-F1)
