@@ -18,11 +18,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import warnings
 
-# Suppress warnings for cleaner output
 warnings.filterwarnings('ignore')
-
-# Enable FastF1 caching for better performance
-
 
 # Page configuration
 st.set_page_config(
@@ -908,11 +904,11 @@ def main():
         st.markdown("""
         ### Features
         
-        - **Racing Line Heatmap**: Visualize the racing line with speed-based coloring
-        - **Throttle/Brake/Gear Visualization**: Toggle additional telemetry overlays
-        - **Driver Comparison**: Compare multiple drivers on the same track
-        - **Sector Analysis**: Analyze sector-wise lap deltas
-        - **Qualifying vs Race**: Compare qualifying and race laps
+        - **Racing Line Heatmap**: Visualize the racing line with speed-based coloring.
+        - **Throttle/Brake/Gear Visualization**: Toggle additional telemetry overlays.
+        - **Driver Comparison**: Compare multiple drivers on the same track.
+        - **Sector Analysis**: Analyze sector-wise lap deltas.
+        - **Qualifying vs Race**: Compare qualifying and race laps.
         
         ###  How It Works
         
